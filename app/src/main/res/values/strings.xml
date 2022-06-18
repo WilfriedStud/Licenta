@@ -1,6 +1,9 @@
 <resources>
     <string name="app_name">Cloud processing client</string>
-    <string name="tab_text_1">Local metrics view</string>
-    <string name="tab_text_2">Cloud computed metrics view</string>
+    <string name="tab_text_1">Local metrics</string>
+    <string name="tab_text_2">Cloud metrics</string>
     <string name="tab_text_3">Cloud alerts</string>
+    <string name="TEST_local_data_fragment">Local data fragment</string>
+    <string name="TEST_cloud_data_fragment">Cloud data fragment</string>
+    <string name="TEST_notifications_fragment">Notifications fragment</string>
 </resources>

@@ -4,7 +4,10 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.25" />
+        <entry key="app/src/main/res/layout/fragment_cloud_data.xml" value="0.25" />
+        <entry key="app/src/main/res/layout/fragment_local_data.xml" value="0.32472826086956524" />
         <entry key="app/src/main/res/layout/fragment_main.xml" value="0.35625" />
+        <entry key="app/src/main/res/layout/fragment_notifications.xml" value="0.32472826086956524" />
       </map>
     </option>
   </component>
