@@ -7,9 +7,9 @@
     <string name="cloud_data_fragment_title">Cloud data fragment</string>
     <string name="notifications_fragment_title">Notifications fragment</string>
     <string name="ambient_temperature_label">Ambient temperature (°C)</string>
-    <string name="magnetic_field_label">Magnetic field (NE-Up μT)</string>
     <string name="proximity_label">Proximity (cm)</string>
     <string name="light_label">Light (lux)</string>
     <string name="pressure_label">Pressure (hPa)</string>
     <string name="relative_humidity">Relative humidity (%)</string>
+    <string name="sensor_not_available">Sensor not available</string>
 </resources>
