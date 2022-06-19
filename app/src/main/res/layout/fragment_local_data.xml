@@ -13,14 +13,82 @@
         android:orientation="vertical">
 
         <TextView
-            android:id="@+id/labelAmbientTemperature"
+            android:id="@+id/labelGyro"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/ambient_temperature_label" />
+            android:text="@string/gyro_label" />
 
         <TextView
-            android:id="@+id/localViewAmbientTemperatureData"
+            android:id="@+id/localViewGyroX"
             android:layout_width="156dp"
+            android:layout_height="25dp"
+            android:text="@string/sensor_not_available" />
+
+        <TextView
+            android:id="@+id/localViewGyroY"
+            android:layout_width="match_parent"
+            android:layout_height="25dp"
+            android:text="@string/sensor_not_available" />
+
+        <TextView
+            android:id="@+id/localViewGyroZ"
+            android:layout_width="match_parent"
+            android:layout_height="25dp"
+            android:text="@string/sensor_not_available" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="32sp" />
+
+        <TextView
+            android:id="@+id/labelAccel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/accel_label" />
+
+        <TextView
+            android:id="@+id/localViewAccelX"
+            android:layout_width="156dp"
+            android:layout_height="25dp"
+            android:text="@string/sensor_not_available" />
+
+        <TextView
+            android:id="@+id/localViewAccelY"
+            android:layout_width="match_parent"
+            android:layout_height="25dp"
+            android:text="@string/sensor_not_available" />
+
+        <TextView
+            android:id="@+id/localViewAccelZ"
+            android:layout_width="match_parent"
+            android:layout_height="25dp"
+            android:text="@string/sensor_not_available" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="32sp" />
+
+        <TextView
+            android:id="@+id/labelMagnetic"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/magnetic_label" />
+
+        <TextView
+            android:id="@+id/localViewMagneticX"
+            android:layout_width="156dp"
+            android:layout_height="25dp"
+            android:text="@string/sensor_not_available" />
+
+        <TextView
+            android:id="@+id/localViewMagneticY"
+            android:layout_width="match_parent"
+            android:layout_height="25dp"
+            android:text="@string/sensor_not_available" />
+
+        <TextView
+            android:id="@+id/localViewMagneticZ"
+            android:layout_width="match_parent"
             android:layout_height="25dp"
             android:text="@string/sensor_not_available" />
 
@@ -40,53 +108,6 @@
             android:layout_height="25dp"
             android:text="@string/sensor_not_available" />
 
-        <Space
-            android:layout_width="match_parent"
-            android:layout_height="32sp" />
-
-        <TextView
-            android:id="@+id/labelPressure"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/pressure_label" />
-
-        <TextView
-            android:id="@+id/localViewPressure"
-            android:layout_width="156dp"
-            android:layout_height="25dp"
-            android:text="@string/sensor_not_available" />
-
-        <Space
-            android:layout_width="match_parent"
-            android:layout_height="32sp" />
-
-        <TextView
-            android:id="@+id/labelLight"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/light_label" />
-
-        <TextView
-            android:id="@+id/localViewLight"
-            android:layout_width="156dp"
-            android:layout_height="25dp"
-            android:text="@string/sensor_not_available" />
-
-        <Space
-            android:layout_width="match_parent"
-            android:layout_height="32sp" />
-
-        <TextView
-            android:id="@+id/labelRelativeHumidity"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/relative_humidity" />
-
-        <TextView
-            android:id="@+id/localViewRelativeHumidity"
-            android:layout_width="156dp"
-            android:layout_height="25dp"
-            android:text="@string/sensor_not_available" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

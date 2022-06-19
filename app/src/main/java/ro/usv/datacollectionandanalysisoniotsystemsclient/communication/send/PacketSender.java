@@ -13,11 +13,14 @@ import com.microsoft.azure.sdk.iot.device.IotHubStatusCode;
 import com.microsoft.azure.sdk.iot.device.Message;
 import com.microsoft.azure.sdk.iot.device.transport.IotHubConnectionStatus;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.IOException;
 import java.net.URISyntaxException;
 
 import ro.usv.datacollectionandanalysisoniotsystemsclient.BuildConfig;
 
+// source: https://github.com/Azure-Samples/azure-iot-samples-java/blob/master/iot-hub/Samples/device/AndroidSample/app/src/main/java/com/microsoft/azure/iot/sdk/samples/androidsample/MainActivity.java
 public class PacketSender {
 
     private DeviceClient client;
@@ -36,15 +39,17 @@ public class PacketSender {
     private static final int METHOD_NOT_DEFINED = 404;
 
     public void send(Context context, String json) {
-        sendThread = new Thread(() -> {
-            try {
-                initClient(context);
-                sendMessages(json);
-            } catch (Exception e) {
-                System.out.println("Exception while opening IoTHub connection: " + e);
-            }
-        });
-        sendThread.start();
+        if (!StringUtils.isBlank(json)) {
+            sendThread = new Thread(() -> {
+                try {
+                    initClient(context);
+                    sendMessages(json);
+                } catch (Exception e) {
+                    System.out.println("Exception while opening IoTHub connection: " + e);
+                }
+            });
+            sendThread.start();
+        }
     }
 
     public void stop() {

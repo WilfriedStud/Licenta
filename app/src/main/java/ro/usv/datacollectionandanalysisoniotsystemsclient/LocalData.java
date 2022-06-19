@@ -25,6 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import ro.usv.datacollectionandanalysisoniotsystemsclient.communication.send.PacketSender;
@@ -38,7 +39,7 @@ public class LocalData extends Fragment {
 
     private SensorManager sensorManager;
     private Set<SensorData> singleValueSensorDataSet;
-    private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+    private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(2);
     private final PacketSender packetSender = new PacketSender();
 
     public LocalData() {
@@ -76,89 +77,166 @@ public class LocalData extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         singleValueSensorDataSet = new HashSet<>();
-        Optional.ofNullable(sensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE))
+        Optional.ofNullable(sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE))
                 .ifPresent(s -> singleValueSensorDataSet.add(new SensorData()
                         .withSensor(s)
-                        .withTextView(requireView().findViewById(R.id.localViewAmbientTemperatureData))));
+                        .withTextViews(new TextView[]{
+                                requireView().findViewById(R.id.localViewGyroX),
+                                requireView().findViewById(R.id.localViewGyroY),
+                                requireView().findViewById(R.id.localViewGyroZ),
+                        })));
 
-        Optional.ofNullable(sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY))
+        Optional.ofNullable(sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER))
                 .ifPresent(s -> singleValueSensorDataSet.add(new SensorData()
                         .withSensor(s)
-                        .withTextView(requireView().findViewById(R.id.localViewProximity))));
+                        .withTextViews(new TextView[]{
+                                requireView().findViewById(R.id.localViewAccelX),
+                                requireView().findViewById(R.id.localViewAccelY),
+                                requireView().findViewById(R.id.localViewAccelZ),
+                        })));
 
-        Optional.ofNullable(sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE))
+        Optional.ofNullable(sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD))
                 .ifPresent(s -> singleValueSensorDataSet.add(new SensorData()
                         .withSensor(s)
-                        .withTextView(requireView().findViewById(R.id.localViewPressure))));
+                        .withTextViews(new TextView[]{
+                                requireView().findViewById(R.id.localViewMagneticX),
+                                requireView().findViewById(R.id.localViewMagneticY),
+                                requireView().findViewById(R.id.localViewMagneticZ)
+                        })));
 
-        Optional.ofNullable(sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT))
-                .ifPresent(s -> singleValueSensorDataSet.add(new SensorData()
-                        .withSensor(s)
-                        .withTextView(requireView().findViewById(R.id.localViewLight))));
 
-        Optional.ofNullable(sensorManager.getDefaultSensor(Sensor.TYPE_RELATIVE_HUMIDITY))
+        Optional.ofNullable(sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD))
                 .ifPresent(s -> singleValueSensorDataSet.add(new SensorData()
                         .withSensor(s)
-                        .withTextView(requireView().findViewById(R.id.localViewRelativeHumidity))));
+                        .withTextViews(new TextView[]{
+                                requireView().findViewById(R.id.localViewProximity),
+                        })));
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        startActivity();
     }
 
     @Override
     public void onResume() {
         super.onResume();
+        startActivity();
+    }
 
-        singleValueSensorDataSet.forEach(sensorData ->
-                sensorManager.registerListener(
-                        sensorData.eventCallbackPoller(),
-                        sensorData.sensor,
-                        SensorManager.SENSOR_DELAY_NORMAL));
-
-        executorService.scheduleWithFixedDelay(() -> {
-                    String jsonData = "{\n" +
-                            "  \"data-pack\": [\n" +
-                            singleValueSensorDataSet
-                                    .stream()
-                                    .map(SensorData::toString)
-                                    .collect(Collectors.joining(",")) +
-                            " ]\n" +
-                            "}";
-                    System.out.println(jsonData.replaceAll("\\s+", ""));
-                    packetSender.send(requireContext(), jsonData.replaceAll("\\s+", ""));
-                },
-                10, 10, TimeUnit.SECONDS);
+    @Override
+    public void onStop() {
+        super.onStop();
+        stopActivity();
     }
 
     @Override
     public void onPause() {
         super.onPause();
+        stopActivity();
+    }
+
+    private void stopActivity() {
         singleValueSensorDataSet.forEach(sensorData -> sensorManager.unregisterListener(sensorData.sensorEventCallback));
         packetSender.stop();
         executorService.shutdown();
     }
 
+    private void startActivity() {
+        singleValueSensorDataSet.forEach(sensorData ->
+                sensorManager.registerListener(
+                        sensorData.eventCallbackPoller(),
+                        sensorData.sensor,
+                        SensorManager.SENSOR_DELAY_UI));
+
+        executorService.scheduleWithFixedDelay(() -> {
+            String jsonData = "{\n" +
+                    "  \"data-pack\": [\n" +
+                    singleValueSensorDataSet
+                            .stream()
+                            .map(SensorData::toString)
+                            .collect(Collectors.joining(",")) +
+                    " ]\n" +
+                    "}";
+            System.out.println(jsonData.replaceAll("\\s+", ""));
+            packetSender.send(requireContext(), jsonData.replaceAll("\\s+", ""));
+        }, 10, 10, TimeUnit.SECONDS);
+
+        executorService.scheduleWithFixedDelay(() ->
+                singleValueSensorDataSet.forEach(sensorData -> {
+
+                    float totalX = sensorData.totalX.getAndSet(0);
+                    float totalY = sensorData.totalY.getAndSet(0);
+                    float totalZ = sensorData.totalZ.getAndSet(0);
+                    int countX = sensorData.countX.getAndSet(0);
+                    int countY = sensorData.countY.getAndSet(0);
+                    int countZ = sensorData.countZ.getAndSet(0);
+
+
+                    System.out.println(totalX);
+                    System.out.println(totalZ);
+                    System.out.println(totalY);
+
+                    if (countX > 0) {
+                        sensorData.sensorValueByTimeStamp.put(
+                                System.currentTimeMillis(), new SensorData.Vector3(
+                                        countZ > 0 ? totalX / countX : 0,
+                                        countZ > 0 ? totalY / countY : 0,
+                                        countZ > 0 ? totalZ / countZ : 0));
+
+                        if (sensorData.textViews.length > 0) {
+                            sensorData.textViews[0].setText(String.valueOf((float) (countZ > 0 ? totalX / countX : 0)));
+                        }
+                        if (sensorData.textViews.length > 1) {
+                            sensorData.textViews[1].setText(String.valueOf((float) (countZ > 0 ? totalY / countY : 0)));
+                        }
+                        if (sensorData.textViews.length > 2) {
+                            sensorData.textViews[2].setText(String.valueOf((float) (countZ > 0 ? totalZ / countZ : 0)));
+                        }
+                    }
+                }), 500, 500, TimeUnit.MILLISECONDS);
+    }
+
     private static class SensorData {
-        ConcurrentHashMap<Long, Float> sensorValueByTimeStamp = new ConcurrentHashMap<>();
+        ConcurrentHashMap<Long, Vector3> sensorValueByTimeStamp = new ConcurrentHashMap<>();
         Sensor sensor;
-        TextView textView;
+        TextView[] textViews;
         SensorEventCallback sensorEventCallback;
+
+        AtomicFloat totalX = new AtomicFloat(), totalY = new AtomicFloat(), totalZ = new AtomicFloat();
+        AtomicInteger countX = new AtomicInteger(), countY = new AtomicInteger(), countZ = new AtomicInteger();
 
         SensorData withSensor(Sensor sensor) {
             this.sensor = sensor;
             return this;
         }
 
-        SensorData withTextView(TextView textView) {
-            this.textView = textView;
+        SensorData withTextViews(TextView[] textViews) {
+            this.textViews = textViews;
             return this;
         }
 
         SensorEventListener eventCallbackPoller() {
+
             if (isNull(sensorEventCallback)) {
                 sensorEventCallback = new SensorEventCallback() {
                     @Override
                     public void onSensorChanged(SensorEvent event) {
                         super.onSensorChanged(event);
-                        sensorValueByTimeStamp.put(System.currentTimeMillis(), event.values[0]);
-                        textView.setText(String.valueOf(event.values[0]));
+
+                        if (event.values.length > 0) {
+                            totalX.addAndGet(event.values[0]);
+                            countX.incrementAndGet();
+                        }
+                        if (event.values.length > 1) {
+                            totalY.addAndGet(event.values[1]);
+                            countY.incrementAndGet();
+                        }
+                        if (event.values.length > 2) {
+                            totalZ.addAndGet(event.values[2]);
+                            countZ.incrementAndGet();
+                        }
                     }
                 };
             }
@@ -175,7 +253,7 @@ public class LocalData extends Fragment {
                     "    }";
         }
 
-        private String stringifyDataAndClearUsedValues() {
+        String stringifyDataAndClearUsedValues() {
             return sensorValueByTimeStamp
                     .entrySet()
                     .stream()
@@ -186,6 +264,28 @@ public class LocalData extends Fragment {
                                     "          \"data\": \"" + kv.getValue() + "\"\n" +
                                     "        }")
                     .collect(Collectors.joining(","));
+        }
+
+        private static class Vector3 {
+            final float x;
+            final float y;
+            final float z;
+
+            public Vector3(float x, float y, float z) {
+                this.x = x;
+                this.y = y;
+                this.z = z;
+            }
+
+            @NonNull
+            @Override
+            public String toString() {
+                return "{\n" +
+                        "  \"x\" : \"" + x + "\",\n" +
+                        "  \"y\" : \"" + y + "\",\n" +
+                        "  \"z\" : \"" + z + "\"\n" +
+                        "}";
+            }
         }
     }
 }
