@@ -1,10 +1,12 @@
 package ro.usv.datacollectionandanalysisoniotsystemsclient;
 
 import static androidx.core.content.ContextCompat.getSystemService;
+import static java.util.Objects.isNull;
 
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventCallback;
+import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -19,6 +21,11 @@ import androidx.fragment.app.Fragment;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -27,30 +34,9 @@ import java.util.Set;
  */
 public class LocalData extends Fragment {
 
-    private SensorManager mSensorManager;
-
+    private SensorManager sensorManager;
     private Set<SensorData> singleValueSensorDataSet;
-
-    private static class SensorData {
-        Sensor sensor;
-        TextView textView;
-        SensorEventCallback sensorEventCallback;
-
-        SensorData withSensor(Sensor sensor) {
-            this.sensor = sensor;
-            return this;
-        }
-
-        SensorData withTextView(TextView textView) {
-            this.textView = textView;
-            return this;
-        }
-
-        SensorData withSensorEventCallback(SensorEventCallback sensorEventCallback) {
-            this.sensorEventCallback = sensorEventCallback;
-            return this;
-        }
-    }
+    private ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
     public LocalData() {
         // Required empty public constructor
@@ -72,7 +58,8 @@ public class LocalData extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mSensorManager = getSystemService(requireContext(), SensorManager.class);
+
+        sensorManager = getSystemService(requireContext(), SensorManager.class);
     }
 
     @Override
@@ -86,53 +73,114 @@ public class LocalData extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         singleValueSensorDataSet = new HashSet<>();
-        Optional.ofNullable(mSensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE))
+        Optional.ofNullable(sensorManager.getDefaultSensor(Sensor.TYPE_AMBIENT_TEMPERATURE))
                 .ifPresent(s -> singleValueSensorDataSet.add(new SensorData()
                         .withSensor(s)
                         .withTextView(requireView().findViewById(R.id.localViewAmbientTemperatureData))));
 
-        Optional.ofNullable(mSensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY))
+        Optional.ofNullable(sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY))
                 .ifPresent(s -> singleValueSensorDataSet.add(new SensorData()
                         .withSensor(s)
                         .withTextView(requireView().findViewById(R.id.localViewProximity))));
 
-        Optional.ofNullable(mSensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE))
+        Optional.ofNullable(sensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE))
                 .ifPresent(s -> singleValueSensorDataSet.add(new SensorData()
                         .withSensor(s)
                         .withTextView(requireView().findViewById(R.id.localViewPressure))));
 
-        Optional.ofNullable(mSensorManager.getDefaultSensor(Sensor.TYPE_LIGHT))
+        Optional.ofNullable(sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT))
                 .ifPresent(s -> singleValueSensorDataSet.add(new SensorData()
                         .withSensor(s)
                         .withTextView(requireView().findViewById(R.id.localViewLight))));
 
-        Optional.ofNullable(mSensorManager.getDefaultSensor(Sensor.TYPE_RELATIVE_HUMIDITY))
+        Optional.ofNullable(sensorManager.getDefaultSensor(Sensor.TYPE_RELATIVE_HUMIDITY))
                 .ifPresent(s -> singleValueSensorDataSet.add(new SensorData()
                         .withSensor(s)
                         .withTextView(requireView().findViewById(R.id.localViewRelativeHumidity))));
-
-        registerSensorEvents();
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        registerSensorEvents();
+
+        singleValueSensorDataSet.forEach(sensorData ->
+                sensorManager.registerListener(
+                        sensorData.eventCallbackPoller(),
+                        sensorData.sensor,
+                        SensorManager.SENSOR_DELAY_NORMAL));
+
+        executorService.scheduleWithFixedDelay(() -> {
+                    String jsonData = "{\n" +
+                            "  \"data-pack\": [\n" +
+                            singleValueSensorDataSet
+                                    .stream()
+                                    .map(SensorData::toString)
+                                    .collect(Collectors.joining(",")) +
+                            " ]\n" +
+                            "}";
+                    System.out.println(jsonData.replaceAll("\\s+", ""));
+                },
+                10, 10, TimeUnit.SECONDS);
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        singleValueSensorDataSet.forEach(sensorData -> mSensorManager.unregisterListener(sensorData.sensorEventCallback));
+        singleValueSensorDataSet.forEach(sensorData -> sensorManager.unregisterListener(sensorData.sensorEventCallback));
+        executorService.shutdown();
     }
 
-    private void registerSensorEvents() {
-        singleValueSensorDataSet.forEach(sensorData -> mSensorManager.registerListener(sensorData.withSensorEventCallback(new SensorEventCallback() {
-            @Override
-            public void onSensorChanged(SensorEvent event) {
-                super.onSensorChanged(event);
-                sensorData.textView.setText(String.valueOf(event.values[0]));
+    private static class SensorData {
+        ConcurrentHashMap<Long, Float> sensorValueByTimeStamp = new ConcurrentHashMap<>();
+        Sensor sensor;
+        TextView textView;
+        SensorEventCallback sensorEventCallback;
+
+        SensorData withSensor(Sensor sensor) {
+            this.sensor = sensor;
+            return this;
+        }
+
+        SensorData withTextView(TextView textView) {
+            this.textView = textView;
+            return this;
+        }
+
+        SensorEventListener eventCallbackPoller() {
+            if (isNull(sensorEventCallback)) {
+                sensorEventCallback = new SensorEventCallback() {
+                    @Override
+                    public void onSensorChanged(SensorEvent event) {
+                        super.onSensorChanged(event);
+                        sensorValueByTimeStamp.put(System.currentTimeMillis(), event.values[0]);
+                        textView.setText(String.valueOf(event.values[0]));
+                    }
+                };
             }
-        }).sensorEventCallback, sensorData.sensor, SensorManager.SENSOR_DELAY_NORMAL));
+            return sensorEventCallback;
+        }
+
+        @NonNull
+        @Override
+        public String toString() {
+            return " {\n" +
+                    "      \"sensor-type\": \"" + sensor.getStringType() + "\",\n" +
+                    "      \"data\": [\n" + stringifyDataAndClearUsedValues() +
+                    "      ]\n" +
+                    "    }";
+        }
+
+        private String stringifyDataAndClearUsedValues() {
+            return sensorValueByTimeStamp
+                    .entrySet()
+                    .stream()
+                    .filter(e -> sensorValueByTimeStamp.remove(e.getKey(), e.getValue()))
+                    .map(kv ->
+                            "        {\n" +
+                                    "          \"timestamp\": \"" + kv.getKey() + "\",\n" +
+                                    "          \"data\": \"" + kv.getValue() + "\"\n" +
+                                    "        }")
+                    .collect(Collectors.joining(","));
+        }
     }
 }
