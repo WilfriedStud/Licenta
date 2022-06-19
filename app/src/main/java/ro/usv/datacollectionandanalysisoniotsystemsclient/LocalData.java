@@ -38,7 +38,7 @@ import ro.usv.datacollectionandanalysisoniotsystemsclient.communication.send.Pac
 public class LocalData extends Fragment {
 
     private SensorManager sensorManager;
-    private Set<SensorData> singleValueSensorDataSet;
+    private Set<SensorData> sensorAverageDataSet;
     private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(2);
     private final PacketSender packetSender = new PacketSender();
 
@@ -76,9 +76,9 @@ public class LocalData extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        singleValueSensorDataSet = new HashSet<>();
+        sensorAverageDataSet = new HashSet<>();
         Optional.ofNullable(sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE))
-                .ifPresent(s -> singleValueSensorDataSet.add(new SensorData()
+                .ifPresent(s -> sensorAverageDataSet.add(new SensorData()
                         .withSensor(s)
                         .withTextViews(new TextView[]{
                                 requireView().findViewById(R.id.localViewGyroX),
@@ -87,7 +87,7 @@ public class LocalData extends Fragment {
                         })));
 
         Optional.ofNullable(sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER))
-                .ifPresent(s -> singleValueSensorDataSet.add(new SensorData()
+                .ifPresent(s -> sensorAverageDataSet.add(new SensorData()
                         .withSensor(s)
                         .withTextViews(new TextView[]{
                                 requireView().findViewById(R.id.localViewAccelX),
@@ -96,7 +96,7 @@ public class LocalData extends Fragment {
                         })));
 
         Optional.ofNullable(sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD))
-                .ifPresent(s -> singleValueSensorDataSet.add(new SensorData()
+                .ifPresent(s -> sensorAverageDataSet.add(new SensorData()
                         .withSensor(s)
                         .withTextViews(new TextView[]{
                                 requireView().findViewById(R.id.localViewMagneticX),
@@ -105,8 +105,8 @@ public class LocalData extends Fragment {
                         })));
 
 
-        Optional.ofNullable(sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD))
-                .ifPresent(s -> singleValueSensorDataSet.add(new SensorData()
+        Optional.ofNullable(sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY))
+                .ifPresent(s -> sensorAverageDataSet.add(new SensorData()
                         .withSensor(s)
                         .withTextViews(new TextView[]{
                                 requireView().findViewById(R.id.localViewProximity),
@@ -138,13 +138,13 @@ public class LocalData extends Fragment {
     }
 
     private void stopActivity() {
-        singleValueSensorDataSet.forEach(sensorData -> sensorManager.unregisterListener(sensorData.sensorEventCallback));
+        sensorAverageDataSet.forEach(sensorData -> sensorManager.unregisterListener(sensorData.sensorEventCallback));
         packetSender.stop();
         executorService.shutdown();
     }
 
     private void startActivity() {
-        singleValueSensorDataSet.forEach(sensorData ->
+        sensorAverageDataSet.forEach(sensorData ->
                 sensorManager.registerListener(
                         sensorData.eventCallbackPoller(),
                         sensorData.sensor,
@@ -153,7 +153,7 @@ public class LocalData extends Fragment {
         executorService.scheduleWithFixedDelay(() -> {
             String jsonData = "{\n" +
                     "  \"data-pack\": [\n" +
-                    singleValueSensorDataSet
+                    sensorAverageDataSet
                             .stream()
                             .map(SensorData::toString)
                             .collect(Collectors.joining(",")) +
@@ -164,7 +164,7 @@ public class LocalData extends Fragment {
         }, 10, 10, TimeUnit.SECONDS);
 
         executorService.scheduleWithFixedDelay(() ->
-                singleValueSensorDataSet.forEach(sensorData -> {
+                sensorAverageDataSet.forEach(sensorData -> {
 
                     float totalX = sensorData.totalX.getAndSet(0);
                     float totalY = sensorData.totalY.getAndSet(0);
@@ -172,11 +172,6 @@ public class LocalData extends Fragment {
                     int countX = sensorData.countX.getAndSet(0);
                     int countY = sensorData.countY.getAndSet(0);
                     int countZ = sensorData.countZ.getAndSet(0);
-
-
-                    System.out.println(totalX);
-                    System.out.println(totalZ);
-                    System.out.println(totalY);
 
                     if (countX > 0) {
                         sensorData.sensorValueByTimeStamp.put(
@@ -261,7 +256,7 @@ public class LocalData extends Fragment {
                     .map(kv ->
                             "        {\n" +
                                     "          \"timestamp\": \"" + kv.getKey() + "\",\n" +
-                                    "          \"data\": \"" + kv.getValue() + "\"\n" +
+                                    "          \"data\": " + kv.getValue() + "\n" +
                                     "        }")
                     .collect(Collectors.joining(","));
         }
