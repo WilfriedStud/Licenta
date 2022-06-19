@@ -27,6 +27,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import ro.usv.datacollectionandanalysisoniotsystemsclient.communication.send.PacketSender;
+
 /**
  * A simple {@link Fragment} subclass.
  * Use the {@link LocalData#newInstance} factory method to
@@ -36,7 +38,8 @@ public class LocalData extends Fragment {
 
     private SensorManager sensorManager;
     private Set<SensorData> singleValueSensorDataSet;
-    private ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+    private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+    private final PacketSender packetSender = new PacketSender();
 
     public LocalData() {
         // Required empty public constructor
@@ -119,6 +122,7 @@ public class LocalData extends Fragment {
                             " ]\n" +
                             "}";
                     System.out.println(jsonData.replaceAll("\\s+", ""));
+                    packetSender.send(requireContext(), jsonData.replaceAll("\\s+", ""));
                 },
                 10, 10, TimeUnit.SECONDS);
     }
@@ -127,6 +131,7 @@ public class LocalData extends Fragment {
     public void onPause() {
         super.onPause();
         singleValueSensorDataSet.forEach(sensorData -> sensorManager.unregisterListener(sensorData.sensorEventCallback));
+        packetSender.stop();
         executorService.shutdown();
     }
 
