@@ -12,12 +12,12 @@ import ro.usv.datacollectionandanalysisoniotsystemsclient.R;
 
 /**
  * A simple {@link Fragment} subclass.
- * Use the {@link Notifications#newInstance} factory method to
+ * Use the {@link NotificationsFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class Notifications extends Fragment {
+public class NotificationsFragment extends Fragment {
 
-    public Notifications() {
+    public NotificationsFragment() {
         // Required empty public constructor
     }
 
@@ -27,8 +27,8 @@ public class Notifications extends Fragment {
      *
      * @return A new instance of fragment Notifications.
      */
-    public static Notifications newInstance() {
-        Notifications fragment = new Notifications();
+    public static NotificationsFragment newInstance() {
+        NotificationsFragment fragment = new NotificationsFragment();
         Bundle args = new Bundle();
         fragment.setArguments(args);
         return fragment;

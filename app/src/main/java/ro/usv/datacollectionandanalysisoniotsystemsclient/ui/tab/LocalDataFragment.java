@@ -23,15 +23,15 @@ import ro.usv.datacollectionandanalysisoniotsystemsclient.sensor.SensorReference
 
 /**
  * A simple {@link Fragment} subclass.
- * Use the {@link LocalData#newInstance} factory method to
+ * Use the {@link LocalDataFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class LocalData extends Fragment {
+public class LocalDataFragment extends Fragment {
 
     private SensorManager sensorManager;
     private final Set<SensorReferences> sensorReferenceStore = new HashSet<>();
 
-    public LocalData() {
+    public LocalDataFragment() {
         // Required empty public constructor
     }
 
@@ -41,8 +41,8 @@ public class LocalData extends Fragment {
      *
      * @return A new instance of fragment LocalData.
      */
-    public static LocalData newInstance() {
-        LocalData fragment = new LocalData();
+    public static LocalDataFragment newInstance() {
+        LocalDataFragment fragment = new LocalDataFragment();
         Bundle args = new Bundle();
         fragment.setArguments(args);
         return fragment;

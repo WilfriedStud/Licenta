@@ -2,16 +2,17 @@ package ro.usv.datacollectionandanalysisoniotsystemsclient.ui.main;
 
 import android.content.Context;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
 
-import ro.usv.datacollectionandanalysisoniotsystemsclient.ui.tab.CloudData;
-import ro.usv.datacollectionandanalysisoniotsystemsclient.ui.tab.LocalData;
-import ro.usv.datacollectionandanalysisoniotsystemsclient.ui.tab.Notifications;
 import ro.usv.datacollectionandanalysisoniotsystemsclient.R;
+import ro.usv.datacollectionandanalysisoniotsystemsclient.ui.tab.CloudDataFragment;
+import ro.usv.datacollectionandanalysisoniotsystemsclient.ui.tab.LocalDataFragment;
+import ro.usv.datacollectionandanalysisoniotsystemsclient.ui.tab.NotificationsFragment;
 
 /**
  * A [FragmentPagerAdapter] that returns a fragment corresponding to
@@ -28,15 +29,16 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter {
         mContext = context;
     }
 
+    @NonNull
     @Override
     public Fragment getItem(int position) {
         switch (position) {
             case 0:
-                return LocalData.newInstance();
+                return LocalDataFragment.newInstance();
             case 1:
-                return new CloudData();
+                return new CloudDataFragment();
             case 2:
-                return new Notifications();
+                return NotificationsFragment.newInstance();
             default:
                 throw new IllegalArgumentException("Cannot instantiate not existing tab");
         }

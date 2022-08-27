@@ -12,12 +12,12 @@ import ro.usv.datacollectionandanalysisoniotsystemsclient.R;
 
 /**
  * A simple {@link Fragment} subclass.
- * Use the {@link CloudData#newInstance} factory method to
+ * Use the {@link CloudDataFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class CloudData extends Fragment {
+public class CloudDataFragment extends Fragment {
 
-    public CloudData() {
+    public CloudDataFragment() {
         // Required empty public constructor
     }
 
@@ -27,9 +27,8 @@ public class CloudData extends Fragment {
      *
      * @return A new instance of fragment CloudData.
      */
-    // TODO: Rename and change types and number of parameters
-    public static CloudData newInstance() {
-        CloudData fragment = new CloudData();
+    public static CloudDataFragment newInstance() {
+        CloudDataFragment fragment = new CloudDataFragment();
         Bundle args = new Bundle();
         fragment.setArguments(args);
         return fragment;
