@@ -29,6 +29,7 @@ import ro.usv.datacollectionandanalysisoniotsystemsclient.sensor.SensorReference
 public class LocalDataFragment extends Fragment {
 
     private SensorManager sensorManager;
+
     private final Set<SensorReferences> sensorReferenceStore = new HashSet<>();
 
     public LocalDataFragment() {
@@ -58,9 +59,8 @@ public class LocalDataFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        AzureIotHubConnection communicationChannel = new AzureIotHubConnection(requireContext());
         sensorReferenceStore.add(new SensorReferences()
-                .withEvent(communicationChannel, sensorManager, Sensor.TYPE_GYROSCOPE)
+                .withEvent(AzureIotHubConnection.getInstance(), sensorManager, Sensor.TYPE_GYROSCOPE)
                 .withTextViews(new TextView[]{
                         requireView().findViewById(R.id.localViewGyroX),
                         requireView().findViewById(R.id.localViewGyroY),
@@ -68,7 +68,7 @@ public class LocalDataFragment extends Fragment {
                 }));
 
         sensorReferenceStore.add(new SensorReferences()
-                .withEvent(communicationChannel, sensorManager, Sensor.TYPE_ACCELEROMETER)
+                .withEvent(AzureIotHubConnection.getInstance(), sensorManager, Sensor.TYPE_ACCELEROMETER)
                 .withTextViews(new TextView[]{
                         requireView().findViewById(R.id.localViewAccelX),
                         requireView().findViewById(R.id.localViewAccelY),

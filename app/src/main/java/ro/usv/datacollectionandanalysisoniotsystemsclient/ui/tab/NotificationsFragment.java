@@ -1,14 +1,15 @@
 package ro.usv.datacollectionandanalysisoniotsystemsclient.ui.tab;
 
 import android.os.Bundle;
-
-import androidx.fragment.app.Fragment;
-
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.fragment.app.Fragment;
+
 import ro.usv.datacollectionandanalysisoniotsystemsclient.R;
+import ro.usv.datacollectionandanalysisoniotsystemsclient.communication.AzureIotHubConnection;
+import ro.usv.datacollectionandanalysisoniotsystemsclient.communication.c2d.NotificationCallback;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -34,15 +35,18 @@ public class NotificationsFragment extends Fragment {
         return fragment;
     }
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public void addNotification(String message) {
 
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        AzureIotHubConnection.getInstance().addNotificationCallback(new NotificationCallback(this));
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_notifications, container, false);
     }
 }

@@ -11,7 +11,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import ro.usv.datacollectionandanalysisoniotsystemsclient.communication.AzureIotHubConnection;
-import ro.usv.datacollectionandanalysisoniotsystemsclient.utils.Vector3;
 
 public class SensorAdapterEventCallback extends SensorEventCallback {
 

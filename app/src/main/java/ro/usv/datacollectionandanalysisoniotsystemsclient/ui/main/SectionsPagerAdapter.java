@@ -10,6 +10,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
 
 import ro.usv.datacollectionandanalysisoniotsystemsclient.R;
+import ro.usv.datacollectionandanalysisoniotsystemsclient.communication.AzureIotHubConnection;
 import ro.usv.datacollectionandanalysisoniotsystemsclient.ui.tab.CloudDataFragment;
 import ro.usv.datacollectionandanalysisoniotsystemsclient.ui.tab.LocalDataFragment;
 import ro.usv.datacollectionandanalysisoniotsystemsclient.ui.tab.NotificationsFragment;
@@ -22,11 +23,12 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter {
 
     @StringRes
     private static final int[] TAB_TITLES = new int[]{R.string.tab_text_1, R.string.tab_text_2, R.string.tab_text_3};
-    private final Context mContext;
+    private final Context context;
 
     public SectionsPagerAdapter(Context context, FragmentManager fm) {
         super(fm);
-        mContext = context;
+        this.context = context;
+        AzureIotHubConnection.init(this.context);
     }
 
     @NonNull
@@ -47,7 +49,7 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter {
     @Nullable
     @Override
     public CharSequence getPageTitle(int position) {
-        return mContext.getResources().getString(TAB_TITLES[position]);
+        return context.getResources().getString(TAB_TITLES[position]);
     }
 
     @Override

@@ -1,17 +1,13 @@
 package ro.usv.datacollectionandanalysisoniotsystemsclient.communication;
 
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
+
 import android.content.Context;
 
 import com.microsoft.azure.sdk.iot.device.DeviceClient;
-import com.microsoft.azure.sdk.iot.device.DeviceTwin.DeviceMethodData;
 import com.microsoft.azure.sdk.iot.device.IotHubClientProtocol;
-import com.microsoft.azure.sdk.iot.device.IotHubConnectionStatusChangeCallback;
-import com.microsoft.azure.sdk.iot.device.IotHubConnectionStatusChangeReason;
-import com.microsoft.azure.sdk.iot.device.IotHubEventCallback;
-import com.microsoft.azure.sdk.iot.device.IotHubMessageResult;
-import com.microsoft.azure.sdk.iot.device.IotHubStatusCode;
 import com.microsoft.azure.sdk.iot.device.Message;
-import com.microsoft.azure.sdk.iot.device.transport.IotHubConnectionStatus;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -19,29 +15,41 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 
 import ro.usv.datacollectionandanalysisoniotsystemsclient.BuildConfig;
+import ro.usv.datacollectionandanalysisoniotsystemsclient.communication.c2d.NotificationCallback;
+import ro.usv.datacollectionandanalysisoniotsystemsclient.communication.d2c.MessageReceivedCallback;
+import ro.usv.datacollectionandanalysisoniotsystemsclient.communication.twin.ClientDeviceMethodCallback;
+import ro.usv.datacollectionandanalysisoniotsystemsclient.communication.twin.DeviceMethodStatusCallback;
 
 // source: https://github.com/Azure-Samples/azure-iot-samples-java/blob/master/iot-hub/Samples/device/AndroidSample/app/src/main/java/com/microsoft/azure/iot/sdk/samples/androidsample/MainActivity.java
 public class AzureIotHubConnection {
 
-    private static final IotHubClientProtocol protocol = IotHubClientProtocol.HTTPS;
+    private static AzureIotHubConnection instance;
+
     private final Context appContext;
 
     private DeviceClient client;
-
-
-    private int msgSentCount = 0;
-    private int receiptsConfirmedCount = 0;
-    private int sendFailuresCount = 0;
-    private int msgReceivedCount = 0;
-
     private Thread sendThread;
 
-    private static final int METHOD_SUCCESS = 200;
-    public static final int METHOD_THROWS = 403;
-    private static final int METHOD_NOT_DEFINED = 404;
+    private int msgSentCount = 0;
 
-    public AzureIotHubConnection(Context appContext) {
+    private AzureIotHubConnection(Context appContext) {
+
         this.appContext = appContext;
+    }
+
+    public static AzureIotHubConnection getInstance() {
+        if (nonNull(instance)) {
+            return instance;
+        }
+
+        throw new IllegalArgumentException("Cannot get not initialized instance");
+    }
+
+    public static void init(Context appContext) {
+
+        if (isNull(instance)) {
+            instance = new AzureIotHubConnection(appContext);
+        }
     }
 
     public void send(String json) {
@@ -73,17 +81,32 @@ public class AzureIotHubConnection {
     private void initClient() throws URISyntaxException, IOException {
         String connString = BuildConfig.DeviceConnectionString;
         System.out.println(connString);
-        client = new DeviceClient(connString, protocol);
+        client = new DeviceClient(connString, IotHubClientProtocol.HTTPS);
 
         try {
             client.open();
             client.registerConnectionStatusChangeCallback(new IotHubConnectionStatusChangeCallbackLogger(), new Object());
-            client.setMessageCallback(new MessageCallback(), null);
-            client.subscribeToDeviceMethod(new SampleDeviceMethodCallback(), appContext, new DeviceMethodStatusCallBack(), null);
+            client.subscribeToDeviceMethod(new ClientDeviceMethodCallback(), appContext, new DeviceMethodStatusCallback(), null);
         } catch (Exception e) {
             System.err.println("Exception while opening IoTHub connection: " + e);
             client.closeNow();
             System.out.println("Shutting down...");
+        }
+    }
+
+    public void addNotificationCallback(NotificationCallback notificationCallback) {
+        try {
+            if (isNull(client)) {
+                initClient();
+            }
+            client.setMessageCallback(notificationCallback, null);
+        } catch (Exception e) {
+            try {
+                client.closeNow();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+            System.err.println("Exception while adding notification callback: " + e);
         }
     }
 
@@ -94,111 +117,11 @@ public class AzureIotHubConnection {
             sendMessage.setContentType("application/json");
             sendMessage.setContentEncoding("utf-8");
             System.out.println("Message Sent: " + json);
-            EventCallback eventCallback = new EventCallback();
-            client.sendEventAsync(sendMessage, eventCallback, msgSentCount);
+            MessageReceivedCallback messageReceivedCallback = new MessageReceivedCallback();
+            client.sendEventAsync(sendMessage, messageReceivedCallback, msgSentCount);
             msgSentCount++;
         } catch (Exception e) {
             System.err.println("Exception while sending event: " + e);
-        }
-    }
-
-    class EventCallback implements IotHubEventCallback {
-        public void execute(IotHubStatusCode status, Object context) {
-            int i = context instanceof Integer ? (Integer) context : 0;
-            System.out.println("IoT Hub responded to message " + i
-                    + " with status " + status.name());
-
-            if ((status == IotHubStatusCode.OK) || (status == IotHubStatusCode.OK_EMPTY)) {
-                receiptsConfirmedCount++;
-                System.out.println("Receipts confirmed count: " + receiptsConfirmedCount);
-            } else {
-                sendFailuresCount++;
-                System.out.println("Send failure count: " + sendFailuresCount);
-            }
-        }
-    }
-
-    class MessageCallback implements com.microsoft.azure.sdk.iot.device.MessageCallback {
-        public IotHubMessageResult execute(Message msg, Object context) {
-            System.out.println(
-                    "Received message with content: " + new String(msg.getBytes(), Message.DEFAULT_IOTHUB_MESSAGE_CHARSET));
-            msgReceivedCount++;
-            System.out.println("Message received count: " + msgReceivedCount);
-            System.out.println("[" + new String(msg.getBytes(), Message.DEFAULT_IOTHUB_MESSAGE_CHARSET) + "]");
-            return IotHubMessageResult.COMPLETE;
-        }
-    }
-
-    protected static class IotHubConnectionStatusChangeCallbackLogger implements IotHubConnectionStatusChangeCallback {
-        @Override
-        public void execute(IotHubConnectionStatus status, IotHubConnectionStatusChangeReason statusChangeReason, Throwable throwable, Object callbackContext) {
-            System.out.println();
-            System.out.println("CONNECTION STATUS UPDATE: " + status);
-            System.out.println("CONNECTION STATUS REASON: " + statusChangeReason);
-            System.out.println("CONNECTION STATUS THROWABLE: " + (throwable == null ? "null" : throwable.getMessage()));
-            System.out.println();
-
-            if (throwable != null) {
-                throwable.printStackTrace();
-            }
-
-            switch (status) {
-                case DISCONNECTED:
-                    //connection was lost, and is not being re-established. Look at provided exception for
-                    // how to resolve this issue. Cannot send messages until this issue is resolved, and you manually
-                    // re-open the device client
-                    System.out.println("Disconnected");
-                    break;
-                case DISCONNECTED_RETRYING:
-                    //connection was lost, but is being re-established. Can still send messages, but they won't
-                    // be sent until the connection is re-established
-                    System.out.println("Disconnected retrying");
-                    break;
-                case CONNECTED:
-                    //Connection was successfully re-established. Can send messages.
-                    System.out.println("Connected");
-                    break;
-                default:
-                    System.out.println("Unknown");
-            }
-        }
-    }
-
-    private int method_setSendMessagesInterval(Object methodData) {
-        System.out.println(methodData);
-        return METHOD_SUCCESS;
-    }
-
-    private int method_default(Object data) {
-        System.out.println("invoking default method for this device");
-        // Insert device specific code here
-        System.out.println(data);
-        return METHOD_NOT_DEFINED;
-    }
-
-    protected static class DeviceMethodStatusCallBack implements IotHubEventCallback {
-        public void execute(IotHubStatusCode status, Object context) {
-            System.out.println("IoT Hub responded to device method operation with status " + status.name());
-        }
-    }
-
-    protected class SampleDeviceMethodCallback implements com.microsoft.azure.sdk.iot.device.DeviceTwin.DeviceMethodCallback {
-        @Override
-        public DeviceMethodData call(String methodName, Object methodData, Object context) {
-            DeviceMethodData deviceMethodData;
-            int status;
-            try {
-                if ("setSendMessagesInterval".equals(methodName)) {
-                    status = method_setSendMessagesInterval(methodData);
-                } else {
-                    status = method_default(methodData);
-                }
-                deviceMethodData = new DeviceMethodData(status, "executed " + methodName);
-            } catch (Exception e) {
-                status = METHOD_THROWS;
-                deviceMethodData = new DeviceMethodData(status, "Method Throws " + methodName);
-            }
-            return deviceMethodData;
         }
     }
 }

@@ -1,4 +1,4 @@
-package ro.usv.datacollectionandanalysisoniotsystemsclient.utils;
+package ro.usv.datacollectionandanalysisoniotsystemsclient.sensor;
 
 import androidx.annotation.NonNull;
 
@@ -12,20 +12,6 @@ public class Vector3 {
         this.y = y;
         this.z = z;
     }
-
-    public float getX() {
-        return x;
-    }
-
-    public float getY() {
-        return y;
-    }
-
-    public float getZ() {
-        return z;
-    }
-
-
 
     @NonNull
     @Override
