@@ -21,7 +21,7 @@ import java.net.URISyntaxException;
 import ro.usv.datacollectionandanalysisoniotsystemsclient.BuildConfig;
 
 // source: https://github.com/Azure-Samples/azure-iot-samples-java/blob/master/iot-hub/Samples/device/AndroidSample/app/src/main/java/com/microsoft/azure/iot/sdk/samples/androidsample/MainActivity.java
-public class AzureIotCommunication {
+public class AzureIotHubConnection {
 
     private static final IotHubClientProtocol protocol = IotHubClientProtocol.HTTPS;
     private final Context appContext;
@@ -40,7 +40,7 @@ public class AzureIotCommunication {
     public static final int METHOD_THROWS = 403;
     private static final int METHOD_NOT_DEFINED = 404;
 
-    public AzureIotCommunication(Context appContext) {
+    public AzureIotHubConnection(Context appContext) {
         this.appContext = appContext;
     }
 

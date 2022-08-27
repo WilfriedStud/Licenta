@@ -8,9 +8,9 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
 
-import ro.usv.datacollectionandanalysisoniotsystemsclient.CloudData;
-import ro.usv.datacollectionandanalysisoniotsystemsclient.LocalData;
-import ro.usv.datacollectionandanalysisoniotsystemsclient.Notifications;
+import ro.usv.datacollectionandanalysisoniotsystemsclient.ui.tab.CloudData;
+import ro.usv.datacollectionandanalysisoniotsystemsclient.ui.tab.LocalData;
+import ro.usv.datacollectionandanalysisoniotsystemsclient.ui.tab.Notifications;
 import ro.usv.datacollectionandanalysisoniotsystemsclient.R;
 
 /**

@@ -1,4 +1,4 @@
-package ro.usv.datacollectionandanalysisoniotsystemsclient.utils;
+package ro.usv.datacollectionandanalysisoniotsystemsclient.sensor;
 
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventCallback;
@@ -10,9 +10,10 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import ro.usv.datacollectionandanalysisoniotsystemsclient.communication.AzureIotCommunication;
+import ro.usv.datacollectionandanalysisoniotsystemsclient.communication.AzureIotHubConnection;
+import ro.usv.datacollectionandanalysisoniotsystemsclient.utils.Vector3;
 
-public class AndroidSensorCommunicationChannel extends SensorEventCallback {
+public class SensorAdapterEventCallback extends SensorEventCallback {
 
     private static final int MAX_SAMPLE_RATE = 5;
     private static final int MAX_SIZE_CACHE = 49;
@@ -23,13 +24,13 @@ public class AndroidSensorCommunicationChannel extends SensorEventCallback {
             new ArrayList<>(MAX_SAMPLE_RATE + 1),
             new ArrayList<>(MAX_SAMPLE_RATE + 1)
     };
-    private final AzureIotCommunication communicationChannel;
+    private final AzureIotHubConnection communicationChannel;
     private final String sensorStringType;
 
-    public AndroidSensorCommunicationChannel(SensorManager sensorManager, int sensorType,
-                                             AzureIotCommunication azureIotCommunication) {
+    public SensorAdapterEventCallback(SensorManager sensorManager, int sensorType,
+                                      AzureIotHubConnection azureIotHubConnection) {
 
-        this.communicationChannel = azureIotCommunication;
+        this.communicationChannel = azureIotHubConnection;
 
         if (sensorManager.getSensorList(sensorType).size() > 0) {
             sensorManager.registerListener(

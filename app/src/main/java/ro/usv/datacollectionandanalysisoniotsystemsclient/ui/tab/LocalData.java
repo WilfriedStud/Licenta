@@ -1,11 +1,8 @@
-package ro.usv.datacollectionandanalysisoniotsystemsclient;
+package ro.usv.datacollectionandanalysisoniotsystemsclient.ui.tab;
 
 import static androidx.core.content.ContextCompat.getSystemService;
-import static java.util.Objects.isNull;
 
 import android.hardware.Sensor;
-import android.hardware.SensorEventCallback;
-import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -19,11 +16,10 @@ import androidx.fragment.app.Fragment;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 
-import ro.usv.datacollectionandanalysisoniotsystemsclient.communication.AzureIotCommunication;
-import ro.usv.datacollectionandanalysisoniotsystemsclient.utils.AndroidSensorCommunicationChannel;
+import ro.usv.datacollectionandanalysisoniotsystemsclient.R;
+import ro.usv.datacollectionandanalysisoniotsystemsclient.communication.AzureIotHubConnection;
+import ro.usv.datacollectionandanalysisoniotsystemsclient.sensor.SensorReferences;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -33,9 +29,7 @@ import ro.usv.datacollectionandanalysisoniotsystemsclient.utils.AndroidSensorCom
 public class LocalData extends Fragment {
 
     private SensorManager sensorManager;
-    private Set<SensorReferences> sensorReferenceStore = new HashSet<>();
-    private final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(2);
-    private AzureIotCommunication communicationChannel;
+    private final Set<SensorReferences> sensorReferenceStore = new HashSet<>();
 
     public LocalData() {
         // Required empty public constructor
@@ -62,15 +56,9 @@ public class LocalData extends Fragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_local_data, container, false);
-    }
-
-    @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        communicationChannel = new AzureIotCommunication(requireContext());
+        AzureIotHubConnection communicationChannel = new AzureIotHubConnection(requireContext());
         sensorReferenceStore.add(new SensorReferences()
                 .withEvent(communicationChannel, sensorManager, Sensor.TYPE_GYROSCOPE)
                 .withTextViews(new TextView[]{
@@ -88,26 +76,15 @@ public class LocalData extends Fragment {
                 }));
     }
 
-    private static class SensorReferences {
-        TextView[] textViews;
-        SensorEventCallback sensorEventCallback;
-
-        SensorReferences withEvent(AzureIotCommunication communicationChannel, SensorManager sensorManager, int typeGyroscope) {
-            this.sensorEventCallback = new AndroidSensorCommunicationChannel(sensorManager, typeGyroscope, communicationChannel);
-            return this;
-        }
-
-        SensorReferences withTextViews(TextView[] textViews) {
-            this.textViews = textViews;
-            return this;
-        }
-
-        SensorEventListener eventCallbackPoller() {
-
-            if (isNull(sensorEventCallback)) {
-                throw new IllegalArgumentException("Handler is null");
-            }
-            return sensorEventCallback;
-        }
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        sensorReferenceStore.clear();
     }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_local_data, container, false);
+    }
+
 }
