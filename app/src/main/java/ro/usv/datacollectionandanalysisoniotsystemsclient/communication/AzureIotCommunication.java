@@ -1,4 +1,4 @@
-package ro.usv.datacollectionandanalysisoniotsystemsclient.communication.send;
+package ro.usv.datacollectionandanalysisoniotsystemsclient.communication;
 
 import android.content.Context;
 
@@ -21,11 +21,13 @@ import java.net.URISyntaxException;
 import ro.usv.datacollectionandanalysisoniotsystemsclient.BuildConfig;
 
 // source: https://github.com/Azure-Samples/azure-iot-samples-java/blob/master/iot-hub/Samples/device/AndroidSample/app/src/main/java/com/microsoft/azure/iot/sdk/samples/androidsample/MainActivity.java
-public class PacketSender {
+public class AzureIotCommunication {
+
+    private static final IotHubClientProtocol protocol = IotHubClientProtocol.HTTPS;
+    private final Context appContext;
 
     private DeviceClient client;
 
-    IotHubClientProtocol protocol = IotHubClientProtocol.HTTPS;
 
     private int msgSentCount = 0;
     private int receiptsConfirmedCount = 0;
@@ -38,11 +40,15 @@ public class PacketSender {
     public static final int METHOD_THROWS = 403;
     private static final int METHOD_NOT_DEFINED = 404;
 
-    public void send(Context context, String json) {
+    public AzureIotCommunication(Context appContext) {
+        this.appContext = appContext;
+    }
+
+    public void send(String json) {
         if (!StringUtils.isBlank(json)) {
             sendThread = new Thread(() -> {
                 try {
-                    initClient(context);
+                    initClient();
                     sendMessages(json);
                 } catch (Exception e) {
                     System.out.println("Exception while opening IoTHub connection: " + e);
@@ -64,17 +70,16 @@ public class PacketSender {
         }).start();
     }
 
-    private void initClient(Context applicationContext) throws URISyntaxException, IOException {
+    private void initClient() throws URISyntaxException, IOException {
         String connString = BuildConfig.DeviceConnectionString;
         System.out.println(connString);
         client = new DeviceClient(connString, protocol);
 
         try {
-            client.registerConnectionStatusChangeCallback(new IotHubConnectionStatusChangeCallbackLogger(), new Object());
             client.open();
-            MessageCallback callback = new MessageCallback();
-            client.setMessageCallback(callback, null);
-            client.subscribeToDeviceMethod(new SampleDeviceMethodCallback(), applicationContext, new DeviceMethodStatusCallBack(), null);
+            client.registerConnectionStatusChangeCallback(new IotHubConnectionStatusChangeCallbackLogger(), new Object());
+            client.setMessageCallback(new MessageCallback(), null);
+            client.subscribeToDeviceMethod(new SampleDeviceMethodCallback(), appContext, new DeviceMethodStatusCallBack(), null);
         } catch (Exception e) {
             System.err.println("Exception while opening IoTHub connection: " + e);
             client.closeNow();
@@ -86,6 +91,8 @@ public class PacketSender {
         try {
             Message sendMessage = new Message(json);
             sendMessage.setMessageId(java.util.UUID.randomUUID().toString());
+            sendMessage.setContentType("application/json");
+            sendMessage.setContentEncoding("utf-8");
             System.out.println("Message Sent: " + json);
             EventCallback eventCallback = new EventCallback();
             client.sendEventAsync(sendMessage, eventCallback, msgSentCount);

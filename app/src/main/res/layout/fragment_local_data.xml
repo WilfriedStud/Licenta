@@ -64,50 +64,6 @@
             android:layout_height="25dp"
             android:text="@string/sensor_not_available" />
 
-        <Space
-            android:layout_width="match_parent"
-            android:layout_height="32sp" />
-
-        <TextView
-            android:id="@+id/labelMagnetic"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/magnetic_label" />
-
-        <TextView
-            android:id="@+id/localViewMagneticX"
-            android:layout_width="156dp"
-            android:layout_height="25dp"
-            android:text="@string/sensor_not_available" />
-
-        <TextView
-            android:id="@+id/localViewMagneticY"
-            android:layout_width="match_parent"
-            android:layout_height="25dp"
-            android:text="@string/sensor_not_available" />
-
-        <TextView
-            android:id="@+id/localViewMagneticZ"
-            android:layout_width="match_parent"
-            android:layout_height="25dp"
-            android:text="@string/sensor_not_available" />
-
-        <Space
-            android:layout_width="match_parent"
-            android:layout_height="32sp" />
-
-        <TextView
-            android:id="@+id/labelProximity"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/proximity_label" />
-
-        <TextView
-            android:id="@+id/localViewProximity"
-            android:layout_width="156dp"
-            android:layout_height="25dp"
-            android:text="@string/sensor_not_available" />
-
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
