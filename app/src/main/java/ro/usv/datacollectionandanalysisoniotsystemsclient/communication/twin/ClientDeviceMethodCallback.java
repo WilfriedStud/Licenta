@@ -3,14 +3,22 @@ package ro.usv.datacollectionandanalysisoniotsystemsclient.communication.twin;
 import com.microsoft.azure.sdk.iot.device.DeviceTwin.DeviceMethodCallback;
 import com.microsoft.azure.sdk.iot.device.DeviceTwin.DeviceMethodData;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class ClientDeviceMethodCallback implements DeviceMethodCallback {
 
+    private static final Logger LOG = LoggerFactory.getLogger(ClientDeviceMethodCallback.class);
     private static final int METHOD_SUCCESS = 200;
-    public static final int METHOD_THROWS = 403;
+    private static final int METHOD_THROWS = 403;
     private static final int METHOD_NOT_DEFINED = 404;
 
     @Override
     public DeviceMethodData call(String methodName, Object methodData, Object context) {
+
+        LOG.info("Invoking call with methodName '{}' and methodData '{}' and context '{}'",
+                methodData, methodData, context);
+
         DeviceMethodData deviceMethodData;
         int status;
         try {
@@ -21,6 +29,7 @@ public class ClientDeviceMethodCallback implements DeviceMethodCallback {
             }
             deviceMethodData = new DeviceMethodData(status, "executed " + methodName);
         } catch (Exception e) {
+            LOG.info("Exception in method call", e);
             status = METHOD_THROWS;
             deviceMethodData = new DeviceMethodData(status, "Method Throws " + methodName);
         }
@@ -28,14 +37,16 @@ public class ClientDeviceMethodCallback implements DeviceMethodCallback {
     }
 
     private int method_setSendMessagesInterval(Object methodData) {
-        System.out.println(methodData);
+
+        LOG.info("Invoked method_setSendMessagesInterval {}", methodData);
+
         return METHOD_SUCCESS;
     }
 
     private int method_default(Object data) {
-        System.out.println("invoking default method for this device");
-        // Insert device specific code here
-        System.out.println(data);
+
+        LOG.info("Invoked method_default {}", data);
+
         return METHOD_NOT_DEFINED;
     }
 }
