@@ -11,16 +11,14 @@ import android.widget.TextView;
 import ro.usv.datacollectionandanalysisoniotsystemsclient.communication.AzureIotHubConnection;
 
 public class SensorReferences {
-    TextView[] textViews;
     SensorEventCallback sensorEventCallback;
 
-    public SensorReferences withEvent(AzureIotHubConnection communicationChannel, SensorManager sensorManager, int typeGyroscope) {
-        this.sensorEventCallback = new SensorAdapterEventCallback(sensorManager, typeGyroscope, communicationChannel);
-        return this;
-    }
-
-    public SensorReferences withTextViews(TextView[] textViews) {
-        this.textViews = textViews;
+    public SensorReferences withEvent(AzureIotHubConnection communicationChannel,
+                                      TextView[] textViews,
+                                      SensorManager sensorManager, int typeGyroscope) {
+        this.sensorEventCallback = new SensorAdapterEventCallback(
+                sensorManager, textViews,
+                typeGyroscope, communicationChannel);
         return this;
     }
 }

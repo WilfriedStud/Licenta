@@ -60,20 +60,22 @@ public class LocalDataFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         sensorReferenceStore.add(new SensorReferences()
-                .withEvent(AzureIotHubConnection.getInstance(), sensorManager, Sensor.TYPE_GYROSCOPE)
-                .withTextViews(new TextView[]{
-                        requireView().findViewById(R.id.localViewGyroX),
-                        requireView().findViewById(R.id.localViewGyroY),
-                        requireView().findViewById(R.id.localViewGyroZ),
-                }));
+                .withEvent(AzureIotHubConnection.getInstance(),
+                        new TextView[]{
+                                requireView().findViewById(R.id.localViewGyroX),
+                                requireView().findViewById(R.id.localViewGyroY),
+                                requireView().findViewById(R.id.localViewGyroZ),
+                        },
+                        sensorManager, Sensor.TYPE_GYROSCOPE));
 
         sensorReferenceStore.add(new SensorReferences()
-                .withEvent(AzureIotHubConnection.getInstance(), sensorManager, Sensor.TYPE_ACCELEROMETER)
-                .withTextViews(new TextView[]{
-                        requireView().findViewById(R.id.localViewAccelX),
-                        requireView().findViewById(R.id.localViewAccelY),
-                        requireView().findViewById(R.id.localViewAccelZ),
-                }));
+                .withEvent(AzureIotHubConnection.getInstance(),
+                        new TextView[]{
+                                requireView().findViewById(R.id.localViewAccelX),
+                                requireView().findViewById(R.id.localViewAccelY),
+                                requireView().findViewById(R.id.localViewAccelZ),
+                        },
+                        sensorManager, Sensor.TYPE_ACCELEROMETER));
     }
 
     @Override

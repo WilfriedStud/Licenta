@@ -17,9 +17,9 @@ public class Vector3 {
     @Override
     public String toString() {
         return "{\n" +
-                "  \"x\" : \"" + x + "\",\n" +
-                "  \"y\" : \"" + y + "\",\n" +
-                "  \"z\" : \"" + z + "\"\n" +
+                "  \"x\" : " + x + ",\n" +
+                "  \"y\" : " + y + ",\n" +
+                "  \"z\" : " + z + "\n" +
                 "}";
     }
 }

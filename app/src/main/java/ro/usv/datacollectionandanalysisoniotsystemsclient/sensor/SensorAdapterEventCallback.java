@@ -3,6 +3,7 @@ package ro.usv.datacollectionandanalysisoniotsystemsclient.sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventCallback;
 import android.hardware.SensorManager;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +16,7 @@ import ro.usv.datacollectionandanalysisoniotsystemsclient.communication.AzureIot
 public class SensorAdapterEventCallback extends SensorEventCallback {
 
     private static final int MAX_SAMPLE_RATE = 5;
-    private static final int MAX_SIZE_CACHE = 49;
+    private static final int MAX_SIZE_CACHE = 50;
 
     private final Map<Long, Vector3> dataCacheByTimeStamp = new ConcurrentHashMap<>();
     private final List<Float>[] rollingAverage = new List[]{
@@ -25,11 +26,13 @@ public class SensorAdapterEventCallback extends SensorEventCallback {
     };
     private final AzureIotHubConnection communicationChannel;
     private final String sensorStringType;
+    private final TextView[] textViews;
 
-    public SensorAdapterEventCallback(SensorManager sensorManager, int sensorType,
+    public SensorAdapterEventCallback(SensorManager sensorManager, TextView[] textViews, int sensorType,
                                       AzureIotHubConnection azureIotHubConnection) {
 
         this.communicationChannel = azureIotHubConnection;
+        this.textViews = textViews;
 
         if (sensorManager.getSensorList(sensorType).size() > 0) {
             sensorManager.registerListener(
@@ -53,18 +56,25 @@ public class SensorAdapterEventCallback extends SensorEventCallback {
             data[i] = averageList(rollingAverage[i]);
         }
 
-        if (dataCacheByTimeStamp.size() > MAX_SIZE_CACHE) {
-            communicationChannel.send(packAndClearData());
-        }
         dataCacheByTimeStamp.put(
                 System.currentTimeMillis(),
                 new Vector3(data[0], data[1], data[2]));
+
+        textViews[0].setText(String.valueOf(data[0]));
+        textViews[1].setText(String.valueOf(data[1]));
+        textViews[2].setText(String.valueOf(data[2]));
+
+        if (dataCacheByTimeStamp.size() >= MAX_SIZE_CACHE) {
+            communicationChannel.send(packAndClearData());
+        }
     }
+
+
 
     private String packAndClearData() {
         String json = "{\n" +
-                "      \"sensor-type\": \"" + sensorStringType + "\",\n" +
-                "      \"data\": [\n" + stringifyDataAndClearUsedValues() +
+                "      \"sensorType\": \"" + sensorStringType + "\",\n" +
+                "      \"telemetry\": [\n" + stringifyDataAndClearUsedValues() +
                 "      ]\n" +
                 "    }";
         return json.replaceAll("\\s+", "");
@@ -77,7 +87,7 @@ public class SensorAdapterEventCallback extends SensorEventCallback {
                 .filter(e -> dataCacheByTimeStamp.remove(e.getKey(), e.getValue()))
                 .map(kv ->
                         "        {\n" +
-                                "          \"timestamp\": \"" + kv.getKey() + "\",\n" +
+                                "          \"timestamp\": " + kv.getKey() + ",\n" +
                                 "          \"data\": " + kv.getValue() + "\n" +
                                 "        }")
                 .collect(Collectors.joining(","));
