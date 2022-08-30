@@ -49,8 +49,8 @@ public class CloudDataFragment extends Fragment {
 
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public void onStart() {
+        super.onStart();
         requireView().findViewById(R.id.refreshButton).setOnClickListener(v -> {
             AzureIotHubConnection.getInstance().send(message(requireView().findViewById(R.id.calendarView)));
         });

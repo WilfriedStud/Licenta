@@ -35,8 +35,8 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter {
         this.localData = LocalDataFragment.newInstance();
         this.cloudData = CloudDataFragment.newInstance();
         this.notifications = NotificationsFragment.newInstance();
-        AzureIotHubConnection.getInstance().addNotificationCallback(new NotificationCallback(notifications, cloudData));
         AzureIotHubConnection.init(this.context);
+        AzureIotHubConnection.getInstance().addNotificationCallback(new NotificationCallback(notifications, cloudData));
     }
 
     @NonNull

@@ -23,7 +23,7 @@ import ro.usv.datacollectionandanalysisoniotsystemsclient.communication.c2d.Noti
  */
 public class NotificationsFragment extends Fragment {
 
-    private static final int NOTIF_SIZE = 5;
+    private static final int NOTIF_SIZE = 7;
 
     private final String[] cache = new String[NOTIF_SIZE];
     private final TextView[] notificationsList = new TextView[NOTIF_SIZE];
