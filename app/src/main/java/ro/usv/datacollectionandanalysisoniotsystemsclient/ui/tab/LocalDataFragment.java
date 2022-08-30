@@ -66,6 +66,7 @@ public class LocalDataFragment extends Fragment {
                                 requireView().findViewById(R.id.localViewGyroY),
                                 requireView().findViewById(R.id.localViewGyroZ),
                         },
+                        true,
                         sensorManager, Sensor.TYPE_GYROSCOPE));
 
         sensorReferenceStore.add(new SensorReferences()
@@ -75,6 +76,7 @@ public class LocalDataFragment extends Fragment {
                                 requireView().findViewById(R.id.localViewAccelY),
                                 requireView().findViewById(R.id.localViewAccelZ),
                         },
+                        false,
                         sensorManager, Sensor.TYPE_ACCELEROMETER));
     }
 

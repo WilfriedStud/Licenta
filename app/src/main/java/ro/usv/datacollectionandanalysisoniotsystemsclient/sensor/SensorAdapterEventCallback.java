@@ -27,12 +27,14 @@ public class SensorAdapterEventCallback extends SensorEventCallback {
     private final AzureIotHubConnection communicationChannel;
     private final String sensorStringType;
     private final TextView[] textViews;
+    private final boolean disabled;
 
     public SensorAdapterEventCallback(SensorManager sensorManager, TextView[] textViews, int sensorType,
-                                      AzureIotHubConnection azureIotHubConnection) {
+                                      AzureIotHubConnection azureIotHubConnection, boolean disabled) {
 
         this.communicationChannel = azureIotHubConnection;
         this.textViews = textViews;
+        this.disabled = disabled;
 
         if (sensorManager.getSensorList(sensorType).size() > 0) {
             sensorManager.registerListener(
@@ -56,17 +58,20 @@ public class SensorAdapterEventCallback extends SensorEventCallback {
             data[i] = averageList(rollingAverage[i]);
         }
 
-        dataCacheByTimeStamp.put(
-                System.currentTimeMillis(),
-                new Vector3(data[0], data[1], data[2]));
+        if (!disabled) {
+            dataCacheByTimeStamp.put(
+                    System.currentTimeMillis(),
+                    new Vector3(data[0], data[1], data[2]));
 
-        textViews[0].setText(String.valueOf(data[0]));
-        textViews[1].setText(String.valueOf(data[1]));
-        textViews[2].setText(String.valueOf(data[2]));
-
-        if (dataCacheByTimeStamp.size() >= MAX_SIZE_CACHE) {
-            communicationChannel.send(packAndClearData());
+            if (dataCacheByTimeStamp.size() >= MAX_SIZE_CACHE) {
+                communicationChannel.send(packAndClearData());
+            }
         }
+
+        textViews[0].setText(String.format("%.2f", data[0]));
+        textViews[1].setText(String.format("%.2f", data[1]));
+        textViews[2].setText(String.format("%.2f", data[2]));
+
     }
 
 
@@ -74,6 +79,7 @@ public class SensorAdapterEventCallback extends SensorEventCallback {
     private String packAndClearData() {
         String json = "{\n" +
                 "      \"sensorType\": \"" + sensorStringType + "\",\n" +
+                "      \"requestParams\": \"data\",\n" +
                 "      \"telemetry\": [\n" + stringifyDataAndClearUsedValues() +
                 "      ]\n" +
                 "    }";

@@ -8,6 +8,10 @@ import android.widget.TextView;
 
 import androidx.fragment.app.Fragment;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+
 import ro.usv.datacollectionandanalysisoniotsystemsclient.R;
 import ro.usv.datacollectionandanalysisoniotsystemsclient.communication.AzureIotHubConnection;
 import ro.usv.datacollectionandanalysisoniotsystemsclient.communication.c2d.NotificationCallback;
@@ -19,8 +23,11 @@ import ro.usv.datacollectionandanalysisoniotsystemsclient.communication.c2d.Noti
  */
 public class NotificationsFragment extends Fragment {
 
-    private TextView[] notificationsList;
-    private int index = 0;
+    private static final int NOTIF_SIZE = 5;
+
+    private final String[] cache = new String[NOTIF_SIZE];
+    private final TextView[] notificationsList = new TextView[NOTIF_SIZE];
+    private boolean hasStarted = false;
 
     public NotificationsFragment() {
         // Required empty public constructor
@@ -40,25 +47,40 @@ public class NotificationsFragment extends Fragment {
     }
 
     public void addNotification(String message) {
-        for (int i = 1; i < notificationsList.length; i++) {
-            notificationsList[i - 1].setText(notificationsList[i].getText());
+
+        if (hasStarted) {
+            if (cache[NOTIF_SIZE - 1] != null) {
+                for (int i = 0; i < NOTIF_SIZE; i++) {
+                    notificationsList[i].setText(cache[i]);
+                    cache[i] = null;
+                }
+            }
+
+            for (int i = 1; i < NOTIF_SIZE; i++) {
+                notificationsList[i - 1].setText(notificationsList[i].getText());
+            }
+            notificationsList[NOTIF_SIZE - 1].setText(message);
+        } else {
+            for (int i = 1; i < NOTIF_SIZE; i++) {
+                cache[i - 1] = cache[i];
+            }
+            cache[NOTIF_SIZE - 1] = message;
+
         }
-        notificationsList[notificationsList.length - 1].setText(message);
+
     }
 
     @Override
     public void onStart() {
         super.onStart();
-        AzureIotHubConnection.getInstance().addNotificationCallback(new NotificationCallback(this));
-        notificationsList = new TextView[]{
-                requireView().findViewById(R.id.textView),
-                requireView().findViewById(R.id.textView2),
-                requireView().findViewById(R.id.textView3),
-                requireView().findViewById(R.id.textView4),
-                requireView().findViewById(R.id.textView5),
-                requireView().findViewById(R.id.textView6),
-                requireView().findViewById(R.id.textView7)
-        };
+        hasStarted = true;
+        notificationsList[0] =  requireView().findViewById(R.id.textView);
+        notificationsList[1] =  requireView().findViewById(R.id.textView2);
+        notificationsList[2] =  requireView().findViewById(R.id.textView3);
+        notificationsList[3] =  requireView().findViewById(R.id.textView4);
+        notificationsList[4] =  requireView().findViewById(R.id.textView5);
+        notificationsList[5] =  requireView().findViewById(R.id.textView6);
+        notificationsList[6] =  requireView().findViewById(R.id.textView7);
     }
 
     @Override
